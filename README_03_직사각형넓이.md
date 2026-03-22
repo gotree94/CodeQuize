@@ -35,24 +35,34 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 using namespace std;
 
 int solution(vector<vector<int>> dots) {
     int answer = 0;
-
     int minX = dots[0][0], maxX = dots[0][0];
     int minY = dots[0][1], maxY = dots[0][1];
-
-    for (int i = 1; i < dots.size(); i++) {
+    for (int i = 1; i < (int)dots.size(); i++) {
         minX = min(minX, dots[i][0]);
         maxX = max(maxX, dots[i][0]);
         minY = min(minY, dots[i][1]);
         maxY = max(maxY, dots[i][1]);
     }
-
     answer = (maxX - minX) * (maxY - minY);
-
     return answer;
+}
+
+int main() {
+    // 테스트: 네 꼭짓점 좌표
+    vector<vector<int>> dots = {
+        {1, 1},
+        {1, 4},
+        {3, 1},
+        {3, 4}
+    };
+    // 예상 결과: (3-1) * (4-1) = 2 * 3 = 6
+    cout << solution(dots) << endl;
+    return 0;
 }
 ```
 
