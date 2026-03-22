@@ -128,9 +128,6 @@ Windows 시작 메뉴 → "Visual Studio Installer" 검색 후 실행
   □ x64/x86용 Spectre 완화 기능이 적용된 C++ MFC (MSVC 미리 보기)
 ```
 
-<img src="./031.png" width="600">
-
-
 **일반적인 Windows x64/x86 데스크톱 개발의 경우 권장 선택:**
 
 | 항목 | 선택 이유 |
@@ -340,12 +337,63 @@ CCircleFromPointsDlg::CCircleFromPointsDlg(CWnd* pParent)
 }
 ```
 
-### 3.5 OnLButtonDown 구현
+---
+
+### 3.5 OnInitDialog — 창 크기 및 우측 패널 영역 확보
+
+이 프로그램은 대화상자를 **캔버스 영역(좌측 700px)** 과 **컨트롤 패널 영역(우측 200px)** 으로 나눠 사용합니다.  
+STEP 01에서는 컨트롤 버튼은 아직 추가하지 않지만, 나중에 추가할 버튼/입력창 자리를 미리 확보하기 위해 창 크기와 레이아웃을 이 단계에서 설정합니다.
+
+```
+┌──────────────────────────────────────────────┬────────────────┐
+│                                              │                │
+│         캔버스 영역                           │  컨트롤 패널   │
+│         (x: 0 ~ 699)                         │  (x: 700~)     │
+│                                              │                │
+│  ← 마우스 클릭, 그리기 모두 이 영역에서 발생  │  (추후 버튼,   │
+│                                              │   입력창 추가) │
+└──────────────────────────────────────────────┴────────────────┘
+         700 px                                     200 px
+                     총 900 px
+```
+
+`OnInitDialog`에 아래 코드를 추가합니다:
+
+```cpp
+BOOL CCircleFromPointsDlg::OnInitDialog()
+{
+    CDialogEx::OnInitDialog();
+
+    // ... (기존 자동생성 코드 유지: 아이콘, About 메뉴 등) ...
+
+    // ── [STEP01] 추가: 창 크기 및 제목 설정 ──────────
+    SetWindowText(_T("세 점의 외접원"));
+
+    // 전체 창: 900×680
+    // 캔버스: x=0~699 (700px), 컨트롤 패널: x=700~899 (200px)
+    MoveWindow(100, 50, 900, 680, TRUE);
+
+    return TRUE;
+}
+```
+
+> **왜 미리 크기를 정해두나요?**  
+> `OnLButtonDown`에서 `point.x >= 700` 조건으로 캔버스 영역을 구분합니다.  
+> 이 경계값(700)이 창 크기(900)와 일치해야 하므로, 창 크기를 먼저 고정해 두는 것입니다.  
+> 나중에 STEP 04에서 이 우측 영역에 버튼과 입력창을 동적으로 추가합니다.
+
+---
+
+### 3.6 OnLButtonDown 구현
+
+캔버스 영역(`x < 700`)에서만 점을 받습니다.  
+우측 컨트롤 패널 영역(`x >= 700`)은 이후 STEP 04에서 버튼과 입력창이 들어올 자리이므로, 지금부터 클릭을 구분해 둡니다.
 
 ```cpp
 void CCircleFromPointsDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
-    // 캔버스 영역(x < 700)만 처리
+    // 우측 컨트롤 패널 영역 클릭은 무시
+    // (STEP04에서 이 영역에 버튼/입력창이 추가될 예정)
     if (point.x >= 700) {
         CDialogEx::OnLButtonDown(nFlags, point);
         return;
@@ -360,7 +408,7 @@ void CCircleFromPointsDlg::OnLButtonDown(UINT nFlags, CPoint point)
 }
 ```
 
-### 3.6 OnPaint — 더블 버퍼링 적용
+### 3.7 OnPaint — 더블 버퍼링 적용
 
 > 더블 버퍼링: 메모리 DC에 먼저 그린 뒤 화면에 한 번에 복사 → 깜빡임 방지
 
@@ -398,7 +446,7 @@ void CCircleFromPointsDlg::OnPaint()
 }
 ```
 
-### 3.7 DrawScene — 점만 그리기 (STEP01 버전)
+### 3.8 DrawScene — 점만 그리기 (STEP01 버전)
 
 ```cpp
 void CCircleFromPointsDlg::DrawScene(CDC* pDC)
