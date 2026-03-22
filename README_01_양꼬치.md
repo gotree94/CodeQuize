@@ -39,12 +39,19 @@
 ```cpp
 #include <string>
 #include <vector>
+#include <iostream>
 using namespace std;
 
 int solution(int n, int k) {
     int answer = 0;
     answer = n * 12000 + k * 2000 - (n / 10) * 2000;
     return answer;
+}
+
+int main() {
+    // 테스트 케이스로 직접 호출
+    cout << solution(10, 3) << endl;   // 결과 출력
+    return 0;
 }
 ```
 
