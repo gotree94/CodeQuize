@@ -40,26 +40,40 @@
 ```cpp
 #include <string>
 #include <vector>
+#include <iostream>
 using namespace std;
 
 vector<int> solution(vector<int> arr, vector<bool> flag) {
     vector<int> answer;
-
-    for (int i = 0; i < arr.size(); i++) {
+    for (int i = 0; i < (int)arr.size(); i++) {
         if (flag[i]) {
-            // arr[i] 값을 arr[i]*2 번 추가
             for (int j = 0; j < arr[i] * 2; j++) {
                 answer.push_back(arr[i]);
             }
         } else {
-            // 마지막 arr[i]개 제거
             for (int j = 0; j < arr[i]; j++) {
                 answer.pop_back();
             }
         }
     }
-
     return answer;
+}
+
+int main() {
+    vector<int>  arr  = {1, 2, 3, 4};
+    vector<bool> flag = {true, false, true, false};
+    // flag[0]=true  → 1을 2번 추가    : {1, 1}
+    // flag[1]=false → 마지막 2개 제거 : {}
+    // flag[2]=true  → 3을 6번 추가    : {3, 3, 3, 3, 3, 3}
+    // flag[3]=false → 마지막 4개 제거 : {3, 3}
+
+    vector<int> result = solution(arr, flag);
+
+    for (int v : result)
+        cout << v << " ";
+    cout << endl;
+
+    return 0;
 }
 ```
 
