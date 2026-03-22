@@ -128,6 +128,9 @@ Windows 시작 메뉴 → "Visual Studio Installer" 검색 후 실행
   □ x64/x86용 Spectre 완화 기능이 적용된 C++ MFC (MSVC 미리 보기)
 ```
 
+<img src="./031.png" width="400">
+
+
 **일반적인 Windows x64/x86 데스크톱 개발의 경우 권장 선택:**
 
 | 항목 | 선택 이유 |
