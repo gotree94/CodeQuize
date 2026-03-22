@@ -445,52 +445,79 @@ void CCircleFromPointsDlg::OnLButtonDown(UINT nFlags, CPoint point)
 > }
 > ```
 
-### 3.7 OnPaint — 더블 버퍼링 적용
+### 3.7 OnPaint — 기존 함수를 더블 버퍼링 방식으로 교체
 
-> 더블 버퍼링: 메모리 DC에 먼저 그린 뒤 화면에 한 번에 복사 → 깜빡임 방지
+자동 생성된 `OnPaint()` 함수가 이미 cpp에 있습니다.  
+`else { CDialogEx::OnPaint(); }` 부분을 아래와 같이 **교체**합니다.
+
+> **더블 버퍼링이란?**  
+> 화면 DC에 직접 그리면 그릴 때마다 깜빡임이 발생합니다.  
+> 메모리 DC(보이지 않는 가상 캔버스)에 먼저 모두 그린 뒤,  
+> 완성된 그림을 `BitBlt`로 화면에 한 번에 복사하면 깜빡임이 없어집니다.
 
 ```cpp
+// ── 자동 생성된 OnPaint를 아래와 같이 교체 ──────────────
 void CCircleFromPointsDlg::OnPaint()
 {
-    if (IsIconic()) {
-        // 최소화 상태 처리 (기본 코드 유지)
+    if (IsIconic())
+    {
+        // 최소화 상태 처리 — 자동 생성 코드 그대로 유지
         CPaintDC dc(this);
-        // ... 생략
-        return;
+        SendMessage(WM_ICONERASEBKGND,
+                    reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+        int cxIcon = GetSystemMetrics(SM_CXICON);
+        int cyIcon = GetSystemMetrics(SM_CYICON);
+        CRect rect;
+        GetClientRect(&rect);
+        int x = (rect.Width()  - cxIcon + 1) / 2;
+        int y = (rect.Height() - cyIcon + 1) / 2;
+        dc.DrawIcon(x, y, m_hIcon);
     }
+    else
+    {
+        // ── [STEP01] 교체: CDialogEx::OnPaint() 대신 더블 버퍼링 적용 ──
+        CPaintDC dc(this);
+        CRect cr;
+        GetClientRect(&cr);
 
-    CPaintDC dc(this);
-    CRect cr;
-    GetClientRect(&cr);
+        // ① 메모리 DC 생성 (화면과 호환되는 가상 캔버스)
+        CDC memDC;
+        memDC.CreateCompatibleDC(&dc);
 
-    // ① 메모리 DC 생성
-    CDC memDC;
-    memDC.CreateCompatibleDC(&dc);
+        CBitmap bmp;
+        bmp.CreateCompatibleBitmap(&dc, cr.Width(), cr.Height());
+        CBitmap* pOld = memDC.SelectObject(&bmp);
 
-    CBitmap bmp;
-    bmp.CreateCompatibleBitmap(&dc, cr.Width(), cr.Height());
-    CBitmap* pOld = memDC.SelectObject(&bmp);
+        // ② 배경 초기화
+        memDC.FillSolidRect(cr, ::GetSysColor(COLOR_BTNFACE));
 
-    // ② 배경 초기화
-    memDC.FillSolidRect(cr, ::GetSysColor(COLOR_BTNFACE));
+        // ③ 메모리 DC에 실제 그리기 (DrawScene은 3.8에서 추가)
+        DrawScene(&memDC);
 
-    // ③ 실제 그리기
-    DrawScene(&memDC);
-
-    // ④ 화면에 복사
-    dc.BitBlt(0, 0, cr.Width(), cr.Height(), &memDC, 0, 0, SRCCOPY);
-    memDC.SelectObject(pOld);
+        // ④ 완성된 메모리 DC를 화면 DC에 한 번에 복사
+        dc.BitBlt(0, 0, cr.Width(), cr.Height(), &memDC, 0, 0, SRCCOPY);
+        memDC.SelectObject(pOld);
+    }
 }
 ```
 
-### 3.8 DrawScene — 점만 그리기 (STEP01 버전)
+> ⚠ `DrawScene(&memDC)` 호출은 3.8에서 `DrawScene` 함수를 추가한 뒤에야  
+> 컴파일이 성공합니다. 3.7과 3.8은 반드시 함께 작업하세요.
+
+---
+
+### 3.8 DrawScene — cpp 파일 맨 끝에 함수 본문 추가
+
+`DrawScene`은 헤더(3.2)에 선언만 해두었고, 아직 구현 본문이 없습니다.  
+`OnLButtonDown` 함수 **아래(cpp 파일 맨 끝)**에 아래 함수 전체를 새로 추가합니다.
 
 ```cpp
+// ── [STEP01] 추가: cpp 파일 맨 끝에 붙여넣기 ────────────
 void CCircleFromPointsDlg::DrawScene(CDC* pDC)
 {
     pDC->SetBkMode(TRANSPARENT);
 
-    // 캔버스 배경
+    // 캔버스 배경 (연한 청회색)
     CRect canvas(0, 0, 700, 650);
     pDC->FillSolidRect(canvas, RGB(245, 247, 252));
 
@@ -500,17 +527,36 @@ void CCircleFromPointsDlg::DrawScene(CDC* pDC)
     pDC->SetTextColor(RGB(80, 80, 80));
     pDC->TextOut(10, 10, msg);
 
-    // 점 그리기 (임시: Rectangle로 표시)
+    // 점 그리기 (임시: Rectangle — STEP05에서 Polyline 원으로 교체)
     for (int i = 0; i < m_nCount; i++) {
         int x = m_pts[i].x, y = m_pts[i].y;
         CBrush br(RGB(220, 50, 50));
-        pDC->SelectObject(&br);
-        pDC->Rectangle(x-5, y-5, x+5, y+5);   // 나중에 원으로 교체
+        CBrush* pOldBr = pDC->SelectObject(&br);
+        pDC->Rectangle(x-5, y-5, x+5, y+5);
+        pDC->SelectObject(pOldBr);
     }
 }
 ```
 
-> ⚠ 이 단계에서는 `Rectangle`로 임시 표시합니다. STEP 05에서 `Polyline` 원으로 교체합니다.
+> ⚠ 이 단계에서는 점을 `Rectangle`로 임시 표시합니다.  
+> STEP 05에서 `Ellipse` 계열 API 금지 조건에 따라 `Polyline` 원으로 교체합니다.
+
+**STEP 01 완료 후 cpp 파일 끝부분 구조 확인**
+
+```
+...
+HCURSOR CCircleFromPointsDlg::OnQueryDragIcon()      ← 자동 생성
+{ ... }
+
+void CCircleFromPointsDlg::OnLButtonDown(...)        ← 3.6에서 추가
+{ ... }
+
+void CCircleFromPointsDlg::DrawScene(CDC* pDC)       ← 3.8에서 추가 (지금)
+{ ... }
+```
+
+이 상태에서 `Ctrl+Shift+B` 로 빌드하면 오류 없이 성공해야 합니다.  
+`Ctrl+F5` 로 실행 후 캔버스 영역을 클릭하면 빨간 사각형 점이 찍히면 STEP 01 완료입니다.
 
 ---
 
