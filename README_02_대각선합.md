@@ -38,11 +38,11 @@ k = 2 일 때 (✅ = 합산, ❌ = 제외)
 ```cpp
 #include <string>
 #include <vector>
+#include <iostream>
 using namespace std;
 
 int solution(vector<vector<int>> board, int k) {
     int answer = 0;
-
     for (int i = 0; i < board.size(); i++) {
         for (int j = 0; j < board[i].size(); j++) {
             if (i + j <= k) {
@@ -50,8 +50,20 @@ int solution(vector<vector<int>> board, int k) {
             }
         }
     }
-
     return answer;
+}
+
+int main() {
+    // 테스트용 board 초기화
+    vector<vector<int>> board = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9}
+    };
+    int k = 2;
+
+    cout << solution(board, k) << endl;  // 결과 출력
+    return 0;
 }
 ```
 
