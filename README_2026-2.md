@@ -1388,11 +1388,14 @@ STEP 05에서 추가한 함수 선언 아래에 추가합니다.
 
 ---
 
-### 8.4 메시지 맵에 추가
+### 8.4 `CircleFromPointsDlg.cpp` — 메시지 맵에 등록
+
+> ⚠ **메시지 맵은 `.cpp` 파일에만 있습니다.**
 
 기존 `ON_WM_LBUTTONDOWN()` 아래에 두 줄을 추가합니다.
 
 ```cpp
+// CircleFromPointsDlg.cpp 의 BEGIN_MESSAGE_MAP 블록
 BEGIN_MESSAGE_MAP(CCircleFromPointsDlg, CDialogEx)
     ON_WM_SYSCOMMAND()
     ON_WM_PAINT()
@@ -1564,13 +1567,32 @@ Ctrl + F5
 
 ---
 
-### 9.3 메시지 맵에 추가
+### 9.3 `CircleFromPointsDlg.cpp` — 메시지 맵에 등록
 
-`ON_WM_MOUSEMOVE()` 아래에 추가합니다.
+> ⚠ **메시지 맵은 반드시 `.cpp` 파일에 있어야 합니다.**  
+> `.h` 파일에는 `afx_msg` **선언**만 하고,  
+> `.cpp` 파일의 `BEGIN_MESSAGE_MAP ~ END_MESSAGE_MAP` 블록에 **등록**합니다.
+
+| 파일 | 작성 내용 |
+|------|-----------|
+| `.h` | `afx_msg void OnBtnReset();` ← 함수 존재를 선언 |
+| `.cpp` 메시지 맵 | `ON_BN_CLICKED(...)` ← 메시지와 함수를 연결 |
+| `.cpp` 본문 | `void CCircleFromPointsDlg::OnBtnReset() { ... }` ← 실제 동작 구현 |
+
+`CircleFromPointsDlg.cpp` 의 `BEGIN_MESSAGE_MAP` 블록에서  
+`ON_WM_MOUSEMOVE()` 아래에 한 줄을 추가합니다.
 
 ```cpp
+// CircleFromPointsDlg.cpp 의 BEGIN_MESSAGE_MAP 블록
+BEGIN_MESSAGE_MAP(CCircleFromPointsDlg, CDialogEx)
+    ON_WM_SYSCOMMAND()
+    ON_WM_PAINT()
+    ON_WM_QUERYDRAGICON()
+    ON_WM_LBUTTONDOWN()
+    ON_WM_LBUTTONUP()
     ON_WM_MOUSEMOVE()
     ON_BN_CLICKED(IDC_BTN_RESET, &CCircleFromPointsDlg::OnBtnReset)  // ← [STEP07] 추가
+END_MESSAGE_MAP()
 ```
 
 ---
@@ -1723,12 +1745,26 @@ Ctrl + F5
 
 ---
 
-### 10.5 메시지 맵에 추가
+### 10.5 `CircleFromPointsDlg.cpp` — 메시지 맵에 등록
+
+> ⚠ **메시지 맵은 `.cpp` 파일에만 있습니다.**  
+> `.h` 에는 `afx_msg` 선언만, `.cpp` 의 `BEGIN_MESSAGE_MAP` 블록에 등록합니다.
+
+`CircleFromPointsDlg.cpp` 의 `BEGIN_MESSAGE_MAP` 블록 전체:
 
 ```cpp
+// CircleFromPointsDlg.cpp 의 BEGIN_MESSAGE_MAP 블록
+BEGIN_MESSAGE_MAP(CCircleFromPointsDlg, CDialogEx)
+    ON_WM_SYSCOMMAND()
+    ON_WM_PAINT()
+    ON_WM_QUERYDRAGICON()
+    ON_WM_LBUTTONDOWN()
+    ON_WM_LBUTTONUP()
+    ON_WM_MOUSEMOVE()
     ON_BN_CLICKED(IDC_BTN_RESET,  &CCircleFromPointsDlg::OnBtnReset)
-    ON_BN_CLICKED(IDC_BTN_RANDOM, &CCircleFromPointsDlg::OnBtnRandom)    // ← [STEP08] 추가
+    ON_BN_CLICKED(IDC_BTN_RANDOM, &CCircleFromPointsDlg::OnBtnRandom)     // ← [STEP08] 추가
     ON_MESSAGE(WM_REDRAW_REQUEST,  &CCircleFromPointsDlg::OnRedrawRequest) // ← [STEP08] 추가
+END_MESSAGE_MAP()
 ```
 
 ---
